@@ -2,6 +2,7 @@ const validateIP = require('validate-ip-node');
 const axios = require('axios');
 
 exports.checkBody = (req, res, next) => {
+  //check if ips and ports are valids
   if (req.body.initial) {
     const adresses = req.body.data;
     for (const adress of adresses) {
@@ -27,27 +28,29 @@ exports.checkBody = (req, res, next) => {
 };
 
 const getNode = async (ip, port) => {
+  //fetch data from bitnodes api
   try {
     const node = await axios.get(
       `https://bitnodes.io/api/v1/nodes/${ip}-${port}/`
     );
-    node.data.port = port;
+    node.data.port = port; //ad port to node data (client purposes)
     return node.data;
   } catch (e) {
     if (e.response.statusText === 'Not Found')
+      //if the adress is not bitcoin node send back difrent node
       return { address: ip, port, status: 'Not A Bitcoin Node' };
     console.log(e.message);
   }
 };
-
+// iterate every address and check if its bitcoin node
 exports.getBitcoinNodesList = async (req, res) => {
   const bitcoinNodesData = [];
   const adresses = req.body.data;
 
   try {
-    for (const adress of adresses) {
+    for (const address of adresses) {
       // eslint-disable-next-line no-await-in-loop
-      const node = await getNode(adress.ip, adress.port);
+      const node = await getNode(address.ip, address.port);
       bitcoinNodesData.push(node);
     }
     console.log(bitcoinNodesData);
